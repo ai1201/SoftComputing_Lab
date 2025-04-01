@@ -1,0 +1,60 @@
+import numpy as np
+import random
+
+class AntColonyOptimization:
+    def __init__(self, num_ants, num_nodes, iterations, alpha=1.0, beta=2.0, evaporation=0.5, Q=1):
+        self.num_ants = num_ants
+        self.num_nodes = num_nodes
+        self.iterations = iterations
+        self.alpha = alpha  # Influence of pheromone
+        self.beta = beta  # Influence of heuristic information
+        self.evaporation = evaporation  # Evaporation rate
+        self.Q = Q  # Pheromone deposit factor
+        self.pheromone = np.ones((num_nodes, num_nodes))  # Initial pheromone levels
+        self.distances = np.random.randint(1, 100, (num_nodes, num_nodes))  # Random distance matrix
+        np.fill_diagonal(self.distances, 0)  # No self-loops
+
+    def run(self):
+        best_path = None
+        best_length = float('inf')
+        
+        for _ in range(self.iterations):
+            all_paths = [self.construct_solution() for _ in range(self.num_ants)]
+            self.update_pheromones(all_paths)
+            
+            for path, length in all_paths:
+                if length < best_length:
+                    best_path, best_length = path, length
+        
+        return best_path, best_length
+
+    def construct_solution(self):
+        path = [random.randint(0, self.num_nodes - 1)]
+        while len(path) < self.num_nodes:
+            next_node = self.select_next_node(path[-1], path)
+            path.append(next_node)
+        path.append(path[0])  # Complete cycle
+        length = self.calculate_path_length(path)
+        return path, length
+
+    def select_next_node(self, current_node, visited):
+        unvisited = [node for node in range(self.num_nodes) if node not in visited]
+        probabilities = [self.pheromone[current_node, node] ** self.alpha * (1.0 / self.distances[current_node, node]) ** self.beta for node in unvisited]
+        probabilities = np.array(probabilities) / sum(probabilities)
+        return np.random.choice(unvisited, p=probabilities)
+
+    def calculate_path_length(self, path):
+        return sum(self.distances[path[i], path[i+1]] for i in range(len(path) - 1))
+
+    def update_pheromones(self, paths):
+        self.pheromone *= (1 - self.evaporation)
+        for path, length in paths:
+            for i in range(len(path) - 1):
+                self.pheromone[path[i], path[i+1]] += self.Q / length
+                self.pheromone[path[i+1], path[i]] += self.Q / length  # Undirected graph
+
+if __name__ == "__main__":
+    aco = AntColonyOptimization(num_ants=5, num_nodes=10, iterations=100)
+    best_path, best_length = aco.run()
+    print("Best Path:", best_path)
+    print("Best Path Length:", best_length)
