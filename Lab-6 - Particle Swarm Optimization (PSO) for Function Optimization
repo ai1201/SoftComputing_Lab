@@ -1,0 +1,52 @@
+import numpy as np
+import random
+
+class Particle:
+    def __init__(self, dimensions, bounds):
+        self.position = np.array([random.uniform(bounds[0], bounds[1]) for _ in range(dimensions)])
+        self.velocity = np.array([random.uniform(-1, 1) for _ in range(dimensions)])
+        self.best_position = np.copy(self.position)
+        self.best_score = float('inf')
+
+def fitness_function(x):
+    """Example function to minimize: Sphere function f(x) = sum(x_i^2)"""
+    return np.sum(x ** 2)
+
+class PSO:
+    def __init__(self, num_particles, dimensions, bounds, iterations, w=0.5, c1=1.5, c2=1.5):
+        self.num_particles = num_particles
+        self.dimensions = dimensions
+        self.bounds = bounds
+        self.iterations = iterations
+        self.w = w  # Inertia weight
+        self.c1 = c1  # Cognitive coefficient
+        self.c2 = c2  # Social coefficient
+        self.particles = [Particle(dimensions, bounds) for _ in range(num_particles)]
+        self.global_best_position = np.copy(self.particles[0].position)
+        self.global_best_score = float('inf')
+    
+    def optimize(self):
+        for _ in range(self.iterations):
+            for particle in self.particles:
+                fitness = fitness_function(particle.position)
+                if fitness < particle.best_score:
+                    particle.best_score = fitness
+                    particle.best_position = np.copy(particle.position)
+                if fitness < self.global_best_score:
+                    self.global_best_score = fitness
+                    self.global_best_position = np.copy(particle.position)
+                
+                r1, r2 = random.random(), random.random()
+                cognitive = self.c1 * r1 * (particle.best_position - particle.position)
+                social = self.c2 * r2 * (self.global_best_position - particle.position)
+                particle.velocity = self.w * particle.velocity + cognitive + social
+                particle.position += particle.velocity
+                particle.position = np.clip(particle.position, self.bounds[0], self.bounds[1])
+        
+        return self.global_best_position, self.global_best_score
+
+if __name__ == "__main__":
+    pso = PSO(num_particles=10, dimensions=2, bounds=(-10, 10), iterations=100)
+    best_position, best_score = pso.optimize()
+    print("Best Position:", best_position)
+    print("Best Score:", best_score)
