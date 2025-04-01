@@ -1,0 +1,38 @@
+import numpy as np
+
+def centroid_defuzzification(fuzzy_set):
+    """
+    Computes defuzzified value using the Centroid (COG) method.
+    """
+    numerator = sum(x * μ for x, μ in fuzzy_set)
+    denominator = sum(μ for _, μ in fuzzy_set)
+    return numerator / denominator if denominator != 0 else 0
+
+def mean_of_maximum(fuzzy_set):
+    """
+    Computes defuzzified value using the Mean of Maximum (MOM) method.
+    """
+    max_membership = max(μ for _, μ in fuzzy_set)
+    max_values = [x for x, μ in fuzzy_set if μ == max_membership]
+    return sum(max_values) / len(max_values) if max_values else 0
+
+def largest_of_maximum(fuzzy_set):
+    """
+    Computes defuzzified value using the Largest of Maximum (LOM) method.
+    """
+    max_membership = max(μ for _, μ in fuzzy_set)
+    return max(x for x, μ in fuzzy_set if μ == max_membership)
+
+def smallest_of_maximum(fuzzy_set):
+    """
+    Computes defuzzified value using the Smallest of Maximum (SOM) method.
+    """
+    max_membership = max(μ for _, μ in fuzzy_set)
+    return min(x for x, μ in fuzzy_set if μ == max_membership)
+
+# Example usage
+fuzzy_set = [(1, 0.2), (2, 0.5), (3, 0.8), (4, 1), (5, 0.6)]
+print("Centroid Defuzzification:", centroid_defuzzification(fuzzy_set))
+print("Mean of Maximum Defuzzification:", mean_of_maximum(fuzzy_set))
+print("Largest of Maximum Defuzzification:", largest_of_maximum(fuzzy_set))
+print("Smallest of Maximum Defuzzification:", smallest_of_maximum(fuzzy_set))
